@@ -1,22 +1,26 @@
-name: Publish docs via GitHub Pages
+name: Documentation
+
 on:
-  pull_request:
+  push:
     branches:
       - v0.x.x
+    paths:
+      - "**.md"
+      - "config/en/mkdocs.yml"
+      - "config/kr/mkdocs.yml"
+  workflow_dispatch:
 
 jobs:
-  build:
-    name: Deploy docs
+  docs:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout main
-        uses: actions/checkout@v2
-
-      - name: Deploy docs
-        uses: mhausenblas/mkdocs-deploy-gh-pages@nomaterial
-
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CONFIG_FILE: config/kr/mkdocs.yml
-          EXTRA_PACKAGES: build-base
-          REQUIREMENTS: requirements.txt
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v3
+      - run: pip install --upgrade pip && pip install mkdocs mkdocs-gen-files mkdocs-material
+      - run: git config user.name 'github-actions[bot]' && git config user.email 'github-actions[bot]@users.noreply.github.com'
+      - name: Publish docs
+        run:
+          python -m mkdocs build -f config/en/mkdocs.yml
+          && python -m mkdocs build -f config/kr/mkdocs.yml
